@@ -3,22 +3,20 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-# Configuração de Identidade Visual
+# Configuração Institucional
 st.set_page_config(page_title="Alpha Macro Terminal", layout="wide")
 
-# Estilo CSS para remover margens desnecessárias e melhorar o fundo
 st.markdown("""
     <style>
     .main { background-color: #0F0F0F; }
-    .stMetric { background-color: #1A1A1A; padding: 15px; border-radius: 10px; border: 1px solid #333; }
+    div[data-testid="stMetric"] { background-color: #161616; padding: 15px; border-radius: 5px; border: 1px solid #333; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #00FBFF; font-family: sans-serif;'>✦ 𝓐𝓵𝓹𝓱𝓪 𝓜𝓪𝓬𝓻𝓸: 𝓒𝔂𝓬𝓵𝓮 𝓜𝓪𝓼𝓽𝓮𝓻 ✦</h1>", unsafe_allow_html=True)
-
-@st.cache_data(ttl=3600) # Atualiza a cada hora para bater com o Python
-def get_data():
+@st.cache_data(ttl=3600)
+def fetch_alpha_data():
     df = yf.download("BTC-USD", period="max", interval="1d", progress=False)
     if isinstance(df.columns, pd.MultiIndex):
         df = df['Close']
@@ -26,7 +24,7 @@ def get_data():
         df = df[['Close']]
     df.columns = ['close']
     
-    # Cálculo de Ciclo (Log Z-Score 350 dias) - Precisão Matemática
+    # Core Matemático (Hedge Fund Precision)
     df['log_price'] = np.log(df['close'])
     window = 350
     df['mean'] = df['log_price'].rolling(window=window).mean()
@@ -35,71 +33,91 @@ def get_data():
     return df.dropna()
 
 try:
-    data = get_data()
-    current_z = data['z_score'].iloc[-1]
-    current_p = data['close'].iloc[-1]
-
-    # --- MÉTRICAS DE TOPO ---
+    data = fetch_alpha_data()
+    last_z = data['z_score'].iloc[-1]
+    
+    # Métricas de Cabeçalho
     c1, c2, c3 = st.columns(3)
-    with c1: st.metric("PREÇO ATUAL", f"${current_p:,.2f}")
-    with c2: st.metric("Z-SCORE", f"{current_z:.2f}")
-    with c3:
-        status = "NEUTRO"
-        color = "#FFFFFF"
-        if current_z <= -1.5:
-            status = "💎 BUY ZONE"
-            color = "#00FBFF" # Aqua/AlphaBlue
-        elif current_z >= 1.8:
-            status = "🔴 SELL ZONE"
-            color = "#3D5AFE" # Blue/AlphaRed
-        st.markdown(f"<h3 style='text-align:center; color:{color}; margin-top:10px;'>{status}</h3>", unsafe_allow_html=True)
+    c1.metric("BITCOIN PRICE", f"${data['close'].iloc[-1]:,.2f}")
+    c2.metric("Z-SCORE LEVEL", f"{last_z:.2f}")
+    
+    status = "NEUTRAL"
+    s_color = "white"
+    if last_z <= -1.5:
+        status = "💎 BUY (BOTTOM)"
+        s_color = "#00FBFF"
+    elif last_z >= 1.8:
+        status = "🔴 SELL (TOP)"
+        s_color = "#3D5AFE"
+    c3.markdown(f"<h2 style='text-align: center; color: {s_color}; margin: 0;'>{status}</h2>", unsafe_allow_html=True)
 
-    # --- GRÁFICO ESTILO PYTHON/MATPLOTLIB ---
-    fig = go.Figure()
+    # CONSTRUÇÃO DO PLOT (REPLICA EXATA DO PYTHON)
+    fig = make_subplots(
+        rows=2, cols=1, 
+        shared_xaxes=True, 
+        vertical_spacing=0.05,
+        row_heights=[0.5, 0.5]
+    )
 
-    # Zonas de Stress (Fundo colorido sólido como no Matplotlib)
-    fig.add_hrect(y0=-3, y1=-1.5, fillcolor="#00FBFF", opacity=0.15, line_width=0)
-    fig.add_hrect(y0=1.8, y1=5, fillcolor="#3D5AFE", opacity=0.15, line_width=0)
+    # 1. PAINEL DE PREÇO (TOPO)
+    fig.add_trace(
+        go.Scatter(x=data.index, y=data['close'], name="Price", line=dict(color='white', width=1.5)),
+        row=1, col=1
+    )
 
-    # Linhas de Fronteira (Estilo PineScript)
-    fig.add_hline(y=1.8, line=dict(color="#3D5AFE", width=1, dash="dash"))
-    fig.add_hline(y=-1.5, line=dict(color="#00FBFF", width=1, dash="dash"))
-    fig.add_hline(y=0, line=dict(color="gray", width=0.5))
+    # 2. PAINEL Z-SCORE (BASE)
+    # Linha base do indicador
+    fig.add_trace(
+        go.Scatter(x=data.index, y=data['z_score'], name="Z-Score", line=dict(color='#888', width=1.2)),
+        row=2, col=1
+    )
 
-    # Linha Principal do Z-Score (Mais grossa para parecer o Matplotlib)
+    # Linhas Tracejadas de Limite (Exatamente como no Python)
+    fig.add_hline(y=1.8, line=dict(color="#3D5AFE", width=1.5, dash="dash"), row=2, col=1)
+    fig.add_hline(y=-1.5, line=dict(color="#00FBFF", width=1.5, dash="dash"), row=2, col=1)
+
+    # PREENCHIMENTO DINÂMICO (Colore apenas as quebras de nível)
+    # Zona de Venda (Topo)
+    fig.add_trace(go.Scatter(x=data.index, y=[1.8]*len(data), line=dict(width=0), showlegend=False), row=2, col=1)
     fig.add_trace(go.Scatter(
         x=data.index, 
-        y=data['z_score'], 
-        name="Z-Score", 
-        line=dict(color='white', width=2.5) # Linha sólida e forte
-    ))
+        y=np.where(data['z_score'] >= 1.8, data['z_score'], 1.8),
+        fill='tonexty',
+        fillcolor='rgba(61, 90, 254, 0.6)', # AlphaRed
+        line=dict(width=0),
+        showlegend=False
+    ), row=2, col=1)
 
-    # Ajuste de Layout "Clean & Professional"
+    # Zona de Compra (Fundo)
+    fig.add_trace(go.Scatter(x=data.index, y=[-1.5]*len(data), line=dict(width=0), showlegend=False), row=2, col=1)
+    fig.add_trace(go.Scatter(
+        x=data.index, 
+        y=np.where(data['z_score'] <= -1.5, data['z_score'], -1.5),
+        fill='tonexty',
+        fillcolor='rgba(0, 251, 255, 0.6)', # AlphaBlue
+        line=dict(width=0),
+        showlegend=False
+    ), row=2, col=1)
+
+    # Layout Mestre
     fig.update_layout(
+        title=dict(text="ALPHA MACRO HISTORY", x=0.5, font=dict(color="#3D5AFE", size=22)),
         template="plotly_dark",
-        height=700,
-        margin=dict(l=20, r=20, t=20, b=20),
         paper_bgcolor="#0F0F0F",
         plot_bgcolor="#0F0F0F",
-        yaxis=dict(
-            gridcolor="#222", 
-            zeroline=False, 
-            title="Stress Level (Z-Score)",
-            tickfont=dict(color="gray")
-        ),
-        xaxis=dict(
-            gridcolor="#222", 
-            title="",
-            tickfont=dict(color="gray"),
-            range=[data.index[-1000], data.index[-1] + pd.Timedelta(days=60)] # Foco nos últimos 3 anos + margem à direita
-        ),
+        height=850,
+        margin=dict(l=50, r=50, t=100, b=50),
         showlegend=False,
         dragmode="pan"
     )
 
-    # Configuração de Interatividade
+    # Configuração de Eixos
+    fig.update_yaxes(type="log", row=1, col=1, gridcolor="#222", showline=True, linecolor="#444")
+    fig.update_yaxes(row=2, col=1, gridcolor="#222", showline=True, linecolor="#444", zeroline=False)
+    fig.update_xaxes(gridcolor="#222", range=[data.index[-1200], data.index[-1] + pd.Timedelta(days=60)])
+
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'scrollZoom': True})
 
 except Exception as e:
-    st.error(f"Erro na renderização: {e}")
-    
+    st.error(f"Erro no Terminal: {e}")
+

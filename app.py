@@ -122,4 +122,4 @@ try:
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'scrollZoom': True})
 
 except Exception as e:
-    st.
+    st.error(f"Erro no Terminal: {e}")

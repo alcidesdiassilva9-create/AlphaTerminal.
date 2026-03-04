@@ -65,6 +65,7 @@ try:
     fig.update_yaxes(row=2, col=1, autorange='reversed')
     
     st.plotly_chart(fig, use_container_width=True)
+    
 
 except Exception as e:
     st.error(f"Erro: {e}")

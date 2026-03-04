@@ -5,10 +5,9 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Configuração de Interface Institucional
+# Configuração Institucional de Alta Performance
 st.set_page_config(page_title="Alpha Macro Terminal", layout="wide")
 
-# Estética Customizada (Métricas em caixas pretas como na imagem)
 st.markdown("""
     <style>
     .main { background-color: #0F0F0F; }
@@ -23,7 +22,6 @@ st.markdown("""
 
 @st.cache_data(ttl=3600)
 def fetch_alpha_data():
-    # Download dos dados máximos
     df = yf.download("BTC-USD", period="max", interval="1d", progress=False)
     if isinstance(df.columns, pd.MultiIndex):
         df = df['Close']
@@ -31,13 +29,13 @@ def fetch_alpha_data():
         df = df[['Close']]
     df.columns = ['close']
     
-    # Matemática de Ciclo (Hedge Fund Standard)
+    # MATEMÁTICA DE CICLO (Hedge Fund Standard)
     df['log_price'] = np.log(df['close'])
     window = 350
     df['mean'] = df['log_price'].rolling(window=window).mean()
     df['std'] = df['log_price'].rolling(window=window).std()
     
-    # Lógica Invertida: Preço < Média = Positivo (Aqua) | Preço > Média = Negativo (Blue)
+    # Lógica Invertida: Preço < Média = Positivo (Aqua/Downside) | Preço > Média = Negativo (Blue/Upside)
     df['z_score'] = (df['mean'] - df['log_price']) / df['std']
     return df.dropna()
 
@@ -45,7 +43,7 @@ try:
     data = fetch_alpha_data()
     last_z = data['z_score'].iloc[-1]
     
-    # --- HEADER DE MÉTRICAS (Estilo image_bbc95f.png) ---
+    # --- HEADER DE MÉTRICAS (Estilo Profissional) ---
     c1, c2, c3 = st.columns([1, 1, 1.2])
     with c1: st.metric("BITCOIN PRICE", f"${data['close'].iloc[-1]:,.2f}")
     with c2: st.metric("Z-SCORE LEVEL", f"{last_z:.2f}")
@@ -61,21 +59,21 @@ try:
             s_color = "#3D5AFE"
         st.markdown(f"<h1 style='text-align: right; color: {s_color}; margin-top: 10px; font-family: sans-serif;'>{status}</h1>", unsafe_allow_html=True)
 
-    # --- CONSTRUÇÃO DO PLOT (REPLICA EXATA image_bc5b88.png) ---
+    # --- CONSTRUÇÃO DO PLOT (AJUSTE DE PROPORÇÃO) ---
     fig = make_subplots(
         rows=2, cols=1, 
         shared_xaxes=True, 
-        vertical_spacing=0.08,
-        row_heights=[0.5, 0.5]
+        vertical_spacing=0.03, # Reduzido para aproximar os gráficos
+        row_heights=[0.65, 0.35] # Gráfico de preço agora é 65% da altura (esticado)
     )
 
-    # 1. PAINEL SUPERIOR: BTC PRICE (LOG CHART)
+    # 1. PAINEL SUPERIOR: BTC PRICE (LOG CHART ESTICADO)
     fig.add_trace(
         go.Scatter(
             x=data.index, 
             y=data['close'], 
             name="Price", 
-            line=dict(color='white', width=1.8)
+            line=dict(color='white', width=2.0)
         ),
         row=1, col=1
     )
@@ -86,21 +84,24 @@ try:
             x=data.index, 
             y=data['z_score'], 
             name="Z-Score", 
-            line=dict(color='#888', width=1.3)
+            line=dict(color='#888', width=1.5)
         ),
         row=2, col=1
     )
 
-    # LINHAS TRACEJADAS PROFISSIONAIS (Trigger em 2 e -2 SD)
-    # Top Side (Blue Zone / Overbought)
+    # LINHAS TRACEJADAS DE LIMITES (±2 SD e ±3 SD)
+    # Upside (Blue / Overbought)
     fig.add_hline(y=-2.0, line=dict(color="#3D5AFE", width=1.5, dash="dash"), row=2, col=1)
-    # Down Side (Aqua Zone / Oversold)
+    fig.add_hline(y=-3.0, line=dict(color="#3D5AFE", width=1.0, dash="dot"), row=2, col=1)
+    
+    # Downside (Aqua / Oversold)
     fig.add_hline(y=2.0, line=dict(color="#00FBFF", width=1.5, dash="dash"), row=2, col=1)
+    fig.add_hline(y=3.0, line=dict(color="#00FBFF", width=1.0, dash="dot"), row=2, col=1)
     
     fig.add_hline(y=0, line=dict(color="rgba(255,255,255,0.2)", width=1), row=2, col=1)
 
-    # PREENCHIMENTO DE COR (Exatamente como na imagem)
-    # Blue Fill (Top / Negative SD)
+    # PREENCHIMENTO DINÂMICO (Trigger em ±2 SD)
+    # Blue Fill (Top / Overbought)
     fig.add_trace(go.Scatter(x=data.index, y=[-2.0]*len(data), line=dict(width=0), showlegend=False), row=2, col=1)
     fig.add_trace(go.Scatter(
         x=data.index, 
@@ -111,7 +112,7 @@ try:
         showlegend=False
     ), row=2, col=1)
 
-    # Aqua Fill (Bottom / Positive SD)
+    # Aqua Fill (Bottom / Oversold)
     fig.add_trace(go.Scatter(x=data.index, y=[2.0]*len(data), line=dict(width=0), showlegend=False), row=2, col=1)
     fig.add_trace(go.Scatter(
         x=data.index, 
@@ -124,39 +125,39 @@ try:
 
     # CONFIGURAÇÃO DE LAYOUT GLOBAL
     fig.update_layout(
-        title=dict(text="ALPHA MACRO HISTORY", x=0.5, font=dict(color="#3D5AFE", size=20)),
+        title=dict(text="ALPHA MACRO HISTORY", x=0.5, font=dict(color="#3D5AFE", size=22)),
         template="plotly_dark",
         paper_bgcolor="#0F0F0F",
         plot_bgcolor="#0F0F0F",
-        height=900,
-        margin=dict(l=50, r=50, t=80, b=50),
+        height=1000, # Altura total aumentada para acomodar o estiramento
+        margin=dict(l=60, r=60, t=100, b=60),
         showlegend=False,
         dragmode="pan"
     )
 
-    # AJUSTES DE EIXO (Log Scale e Eixo Invertido)
+    # AJUSTES DE EIXO (Log Scale e Inversão)
     fig.update_yaxes(
-        type="log", # LOG CHART ATIVADO
+        type="log", 
         row=1, col=1, 
         gridcolor="#222", 
         title="Price (Log)",
         showline=True, linecolor="#444",
         exponentformat="none",
-        tickvals=[100, 1000, 10000, 100000]
+        tickvals=[500, 1000, 5000, 10000, 50000, 100000] # Ticks manuais para escala mais limpa
     )
     
     fig.update_yaxes(
         row=2, col=1, 
         gridcolor="#222", 
         title="Cycle Stress (SD)", 
-        autorange='reversed', # EIXO INVERTIDO (Negativos no topo, Positivos no fundo)
+        autorange='reversed', 
         range=[-4, 4],
         showline=True, linecolor="#444"
     )
     
     fig.update_xaxes(
         gridcolor="#222", 
-        range=[data.index[-2000], data.index[-1] + pd.Timedelta(days=60)],
+        range=[data.index[-1800], data.index[-1] + pd.Timedelta(days=60)],
         showline=True, linecolor="#444"
     )
 
@@ -164,4 +165,3 @@ try:
 
 except Exception as e:
     st.error(f"Erro no Terminal: {e}")
-

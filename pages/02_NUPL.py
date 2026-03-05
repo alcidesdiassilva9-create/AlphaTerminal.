@@ -5,9 +5,10 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Configuração de Identidade Visual Corporativa
-st.set_page_config(page_title="ANUPL: Network Sentiment Proxy", layout="wide")
+# Configuração de Identidade
+st.set_page_config(page_title="NUPL: Network Sentiment Proxy", layout="wide")
 
+# Estética Hedge Fund - Sidebar em Branco/Padrão
 st.markdown("""
 <style>
     .main { background-color: #0F0F0F; } 
@@ -17,7 +18,8 @@ st.markdown("""
         border-radius: 5px; 
         border: 1px solid #333; 
     }
-    [data-testid="stSidebarNav"] span { font-weight: bold; color: #3D5AFE; }
+    /* Garante que o texto da sidebar permanece branco/padrão */
+    [data-testid="stSidebarNav"] span { color: #FFFFFF !important; font-weight: normal; }
 </style>
 """, unsafe_allow_html=True)
 

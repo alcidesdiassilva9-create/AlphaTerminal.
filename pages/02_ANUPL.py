@@ -95,4 +95,4 @@ if not data.empty:
     
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 else:
-    st.error("Erro na obtenção de dados do Alpha Sentiment.")False})
+    st.error("Erro na obtenção de dados do Alpha Sentiment.")

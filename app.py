@@ -5,19 +5,21 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Configuração de Interface Hedge Fund
-st.set_page_config(page_title="ACD Terminal", layout="wide")
+# Configuração de Identidade
+st.set_page_config(page_title="ACD: Macro Cycle Deviation", layout="wide")
 
+# Estética Hedge Fund - Sidebar em Branco/Padrão
 st.markdown("""
 <style>
-    .main { background-color: #0F0F0F; }
+    .main { background-color: #0F0F0F; } 
     div[data-testid='stMetric'] { 
         background-color: #161616; 
         padding: 20px; 
         border-radius: 5px; 
         border: 1px solid #333; 
     }
-    h1 { font-family: serif; }
+    /* Garante que o texto da sidebar permanece branco/padrão */
+    [data-testid="stSidebarNav"] span { color: #FFFFFF !important; font-weight: normal; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -158,5 +160,6 @@ if not data.empty:
 
 else:
     st.error("Falha ao carregar dados. Verifique a conexão com o Yahoo Finance.")
+
 
 

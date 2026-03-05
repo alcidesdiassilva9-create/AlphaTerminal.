@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # Configuração ANUPL Terminal
-st.set_page_config(page_title="02 ANUPL Terminal", layout="wide")
+st.set_page_config(page_title="NUPL", layout="wide")
 
 st.markdown("<style>.main { background-color: #0F0F0F; } div[data-testid='stMetric'] { background-color: #161616; padding: 20px; border-radius: 5px; border: 1px solid #333; }</style>", unsafe_allow_html=True)
 
